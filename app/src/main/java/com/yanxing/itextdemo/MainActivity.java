@@ -7,7 +7,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.itextpdf.text.Chapter;
@@ -16,7 +15,6 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
-import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
@@ -40,21 +38,17 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG = getClass().getName();
     private static final int REQUEST_CODE = 1;
     private static final String PATH = Environment.getExternalStorageDirectory() + "/itexdemo.pdf";
-    private ProgressBar mProgressBar;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mProgressBar= (ProgressBar) findViewById(R.id.progressBar);
     }
 
     /**
      * 点击按钮创建PDF
      */
     public void generatePDF(View view) {
-        mProgressBar.setVisibility(View.VISIBLE);
         if (PermissionUtil.findNeedRequestPermissions(this, new String[]{PermissionUtil.STORAGE, PermissionUtil.STORAGE1}).length > 0) {
             PermissionUtil.requestPermission(this, new String[]{PermissionUtil.STORAGE, PermissionUtil.STORAGE1}
                     , REQUEST_CODE);
@@ -65,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * 创建PDF文件
+     * 创建PDF文件，实际创建需要放在子线程中
      *
      * @param path
      */
@@ -88,13 +82,11 @@ public class MainActivity extends AppCompatActivity {
             //标题下划线，居中
             String title = "itextpdf-demo文档";
             BaseFont zh = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
-            Font chapterFont = new Font(zh, 30, Font.BOLD);
+            Font chapterFont = new Font(zh, 28, Font.BOLD);
             Chunk chunk = new Chunk(title, chapterFont);
             chunk.setUnderline(1, -6);
             Paragraph paragraph = new Paragraph(chunk);
             paragraph.setAlignment(Element.ALIGN_CENTER);
-
-
 
             Chapter chapter = new Chapter(paragraph, 1);
             chapter.setNumberDepth(0);
@@ -112,34 +104,68 @@ public class MainActivity extends AppCompatActivity {
             Paragraph p1 = new Paragraph();
             p1.add(getChunk("名称:"));
             p1.add(getUnderlineChunk("李双祥"));
-            p1.add(getChunk("                                                                  名称:"));
+            p1.add(getChunk("                                                                   名称:"));
             p1.add(getUnderlineChunk("yanxing"));
+            p1.setSpacingAfter(20);
             document.add(p1);
 
 
+            Paragraph p2 = new Paragraph();
+            p2.add(getChunk("1.项目"));
+            p2.setSpacingAfter(10);
+            document.add(p2);
+
             //表格
             PdfPTable table = new PdfPTable(3);
-            table.setWidthPercentage(288 / 5.23f);
-            table.setWidths(new int[] { 2, 1, 1 });
-
-            PdfPCell cell;
-            cell = new PdfPCell(new Phrase("Table 1"));
-            cell.setColspan(3);
+            table.setWidthPercentage(100);
+            Font font = new Font(zh, 16, Font.BOLD);
+            //第一行
+            PdfPCell cell = new PdfPCell(new Phrase(new Chunk("内容", font)));
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+            cell = new PdfPCell(new Phrase(new Chunk("要求", font)));
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+            cell = new PdfPCell(new Phrase(new Chunk("结果/值", font)));
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             table.addCell(cell);
 
-            cell = new PdfPCell(new Phrase("Cell with rowspan 2"));
+            //第二行
+            Font fontNormal = new Font(zh, 14, Font.NORMAL);
+            cell = new PdfPCell(new Phrase(new Chunk("内容1",fontNormal)));
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             cell.setRowspan(2);
             table.addCell(cell);
-            table.addCell("row 1; cell 1");
-            table.addCell("row 1; cell 2");
-            table.addCell("row 2; cell 1");
-            table.addCell("row 2; cell 2");
-
+            cell = new PdfPCell(new Phrase(new Chunk("内容1的要求1占位换行占位换行占位换行占位换行占位换行占位换行占位换行占位换行占位换行占位换行",fontNormal)));
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+            cell = new PdfPCell(new Phrase(new Chunk("内容1的结论1",fontNormal)));
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
+            cell = new PdfPCell(new Phrase(new Chunk("内容1的要求2",fontNormal)));
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            table.addCell(cell);
+            cell = new PdfPCell(new Phrase(new Chunk("内容1的结论2",fontNormal)));
+            cell.setPaddingTop(6);
+            cell.setPaddingBottom(6);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            table.addCell(cell);
             document.add(table);
 
             document.close();
             Toast.makeText(getApplicationContext(),path+getString(R.string.file_create_success),Toast.LENGTH_LONG).show();
-            mProgressBar.setVisibility(View.GONE);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (DocumentException e) {
